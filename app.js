@@ -31,6 +31,13 @@ const item3 = new Item({
 
 const defaultItems = [item1, item2, item3];
 
+const listSchema = {
+  name: String,
+  items: [itemsSchema],
+};
+
+const List = mongoose.model("List", listSchema);
+
 app.get("/", function (req, res) {
   Item.find({}, function (err, foundItems) {
     if (foundItems.length === 0) {
@@ -50,13 +57,22 @@ app.get("/", function (req, res) {
 
 app.post("/", function (req, res) {
   const itemName = req.body.newItem;
+  const listName = req.body.list;
 
   const item = new Item({
     name: itemName,
   });
 
-  item.save();
-  res.redirect("/");
+  if (listName === "Today") {
+    item.save();
+    res.redirect("/");
+  } else {
+    List.findOne({ name: listName }, function (err, foundList) {
+      foundList.items.push(item);
+      foundList.save();
+      res.redirect("/" + listName);
+    });
+  }
 });
 
 app.post("/delete", function (req, res) {
@@ -65,6 +81,31 @@ app.post("/delete", function (req, res) {
   Item.findByIdAndDelete(checkedItemId, function (err) {
     if (!err) {
       res.redirect("/");
+    }
+  });
+});
+
+app.get("/:customListName", function (req, res) {
+  const customListName = req.params.customListName;
+
+  List.findOne({ name: customListName }, function (err, foundList) {
+    if (!err) {
+      if (!foundList) {
+        const list = new List({
+          name: customListName,
+          items: defaultItems,
+        });
+
+        list.save();
+        res.redirect("/" + customListName);
+      } else {
+        // Show an existing list
+        res.render("list", {
+          listTitle: foundList.name,
+          newListItems: foundList.items,
+        });
+        console.log(foundList.name);
+      }
     }
   });
 });
