@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const bodyparser = require("body-parser");
 const mongoose = require("mongoose");
@@ -10,7 +11,16 @@ app.set("view engine", "ejs");
 app.use(bodyparser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
-mongoose.connect("mongodb://127.0.0.1:27017/todolistDB");
+const MONGOATLAS_UNAME = process.env.MONGOATLAS_UNAME;
+const MONGOATLAS_PWD = process.env.MONGOATLAS_PWD;
+
+mongoose.connect(
+  "mongodb+srv://" +
+    MONGOATLAS_UNAME +
+    ":" +
+    MONGOATLAS_PWD +
+    "@cluster0.osrylpd.mongodb.net/todolistDB"
+);
 
 const itemsSchema = {
   name: String,
